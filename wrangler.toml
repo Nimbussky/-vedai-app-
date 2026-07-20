@@ -1,0 +1,13 @@
+name = "vedai-app"
+compatibility_date = "2025-07-19"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[build]
+command = "npm run build"
+watch_dir = "src"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "vedai-db"
+database_id = "c928c70b-0d38-4d51-bce1-85dd499b31cd"
