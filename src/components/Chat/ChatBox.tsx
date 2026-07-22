@@ -37,13 +37,21 @@ const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = 
       if (storedChart) {
         try {
           const parsed = JSON.parse(storedChart);
-          // API returns { planets: [...], cacheKey, source, timestamp }
-          // Extract just the planets for cleaner AI context
           const planets = parsed && Array.isArray(parsed.planets) ? parsed.planets : (Array.isArray(parsed) ? parsed : null);
           setChartData(planets || parsed);
         } catch (e) {
           console.error("Error parsing chart data", e);
         }
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            text: "Namaste! I noticed you haven't saved your birth chart yet. I can answer general astrology questions, but for personalized readings, please add your birth details on the Dashboard!",
+            sender: 'AI',
+            timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+          }
+        ]);
       }
     }
   }, []);

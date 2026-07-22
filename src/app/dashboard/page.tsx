@@ -49,8 +49,10 @@ export default function Dashboard() {
     const chartKeys = Object.keys(localStorage).filter(k => k.startsWith('vedai_profile_'));
     setChartCount(chartKeys.length + 1); // +1 for the main chart
 
+    const abortController = new AbortController();
+
     // Fetch Panchang
-    fetch(`/api/panchang?date=${new Date().toISOString().split('T')[0]}`)
+    fetch(`/api/panchang?date=${new Date().toISOString().split('T')[0]}`, { signal: abortController.signal })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d) setPanchang({
@@ -62,7 +64,9 @@ export default function Dashboard() {
           sunset: d.sunset || '--:--',
         });
       })
-      .catch(() => {});
+      .catch((err) => { if (err.name !== 'AbortError') console.error(err); });
+
+    return () => abortController.abort();
   }, []);
 
   // Fetch transits after userBirth is loaded
@@ -70,6 +74,8 @@ export default function Dashboard() {
     const lat = userBirth?.latitude || 28.6139;
     const lon = userBirth?.longitude || 77.2090;
     const today = new Date().toISOString().split('T')[0];
+
+    const abortController = new AbortController();
 
     fetch('/api/astrology', {
       method: 'POST',
@@ -81,6 +87,7 @@ export default function Dashboard() {
         longitude: lon,
         timezone: 'UTC',
       }),
+      signal: abortController.signal,
     })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -89,7 +96,9 @@ export default function Dashboard() {
           setTransits(d.planets.filter((p: TransitPlanet) => keyPlanets.includes(p.name)).slice(0, 5));
         }
       })
-      .catch(() => {});
+      .catch((err) => { if (err.name !== 'AbortError') console.error(err); });
+
+    return () => abortController.abort();
   }, []);
 
   const initials = typeof userBirth?.name === 'string'

@@ -41,3 +41,12 @@ drizzle/
 # Local database
 *.db
 *.db-journal
+
+# QA outputs (local testing)
+qa_output*.md
+qa_task_input.txt
+qa_output_parallel.md
+
+# OS
+Thumbs.db
+Desktop.ini
