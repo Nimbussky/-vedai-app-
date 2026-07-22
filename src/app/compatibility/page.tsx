@@ -22,6 +22,7 @@ export default function CompatibilityPage() {
     }
     setError('');
     setLoading(true);
+    setResult(null);
     try {
       const res = await fetch('/api/compatibility', {
         method: 'POST',
@@ -32,29 +33,10 @@ export default function CompatibilityPage() {
       if (data.score !== undefined) {
         setResult(data);
       } else {
-        // Fallback score if API fails
-        setResult({
-          score: 82,
-          verdict: 'Excellent compatibility — strong Vedic match',
-          matchingPoints: [
-            { name: 'Varna (Work & Ego)', score: 4, description: 'Perfect alignment in life goals' },
-            { name: 'Vashya (Dominance)', score: 3, description: 'Good mutual understanding' },
-            { name: 'Tara (Destiny)', score: 3, description: 'Favorable star alignment' },
-            { name: 'Yoni (Physical)', score: 4, description: 'Excellent physical connection' }
-          ]
-        });
+        setError(data.error || 'Compatibility calculation failed. Please try again.');
       }
     } catch {
-       setResult({
-          score: 82,
-          verdict: 'Excellent compatibility — strong Vedic match',
-          matchingPoints: [
-            { name: 'Varna (Work & Ego)', score: 4, description: 'Perfect alignment in life goals' },
-            { name: 'Vashya (Dominance)', score: 3, description: 'Good mutual understanding' },
-            { name: 'Tara (Destiny)', score: 3, description: 'Favorable star alignment' },
-            { name: 'Yoni (Physical)', score: 4, description: 'Excellent physical connection' }
-          ]
-        });
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

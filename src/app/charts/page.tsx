@@ -1,14 +1,34 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-const savedCharts = [
-  { id: 1, name: 'My Chart', date: '1990-01-15', place: 'Mumbai, India' },
-  { id: 2, name: 'Partner', date: '1992-05-20', place: 'Delhi, India' },
-  { id: 3, name: 'Mom', date: '1965-08-12', place: 'Kolkata, India' },
-];
+type Chart = {
+  id: string;
+  name: string;
+  date: string;
+  place: string;
+};
 
 export default function ChartsPage() {
+  const [charts, setCharts] = useState<Chart[]>([]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('vedai_user_birth');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          setCharts([{
+            id: '1',
+            name: parsed.name || 'My Chart',
+            date: parsed.dob || parsed.date || '',
+            place: parsed.placeOfBirth || parsed.place || '',
+          }]);
+        }
+      } catch {}
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0B1120] text-[#F7F7F5]">
       <header className="border-b border-[#F7F7F5]/10 px-6 py-4">
@@ -35,7 +55,7 @@ export default function ChartsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {savedCharts.map((chart) => (
+          {charts.map((chart) => (
             <Link key={chart.id} href={`/chart/${chart.id}`}>
               <div className="bg-[#1A2338]/60 backdrop-blur-xl p-6 rounded-2xl border border-[#F7F7F5]/10 hover:border-[#3B5BDB]/30 transition-colors cursor-pointer group">
                 <div className="flex items-center gap-3 mb-4">
@@ -56,6 +76,17 @@ export default function ChartsPage() {
               </div>
             </Link>
           ))}
+
+          {charts.length === 0 && (
+            <Link href="/onboarding">
+              <div className="bg-[#1A2338]/30 backdrop-blur-xl p-6 rounded-2xl border border-dashed border-[#F7F7F5]/10 hover:border-[#3B5BDB]/30 transition-colors cursor-pointer flex flex-col items-center justify-center min-h-[180px]">
+                <div className="w-12 h-12 rounded-full bg-[#3B5BDB]/10 flex items-center justify-center mb-3">
+                  <span className="text-2xl text-[#3B5BDB]">+</span>
+                </div>
+                <p className="text-sm text-[#F7F7F5]/50">Add new chart</p>
+              </div>
+            </Link>
+          )}
 
           <Link href="/onboarding">
             <div className="bg-[#1A2338]/30 backdrop-blur-xl p-6 rounded-2xl border border-dashed border-[#F7F7F5]/10 hover:border-[#3B5BDB]/30 transition-colors cursor-pointer flex flex-col items-center justify-center min-h-[180px]">

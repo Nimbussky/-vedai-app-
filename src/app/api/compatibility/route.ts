@@ -28,6 +28,20 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!profileA.date || !profileA.latitude || !profileA.longitude) {
+      return Response.json(
+        { error: 'Profile A missing required fields: date, latitude, longitude' },
+        { status: 400 }
+      );
+    }
+
+    if (!profileB.date || !profileB.latitude || !profileB.longitude) {
+      return Response.json(
+        { error: 'Profile B missing required fields: date, latitude, longitude' },
+        { status: 400 }
+      );
+    }
+
     const [chartA, chartB] = await Promise.all([
       getPlanets(profileA),
       getPlanets(profileB),
