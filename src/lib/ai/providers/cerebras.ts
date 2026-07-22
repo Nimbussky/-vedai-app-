@@ -5,7 +5,7 @@ export const cerebrasProvider: LLMProvider = {
   name: 'Cerebras',
   slug: 'cerebras',
   url: 'https://api.cerebras.ai/v1/chat/completions',
-  apiKey: process.env.CEREBRAS_API_KEY,
+  getApiKey: () => process.env.CEREBRAS_API_KEY,
   model: 'llama-4-scout-17b-16e-instruct',
   priority: 2,
   supportsStreaming: true,

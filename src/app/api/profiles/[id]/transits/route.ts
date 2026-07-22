@@ -1,5 +1,9 @@
 export const runtime = 'edge';
 
+import { getDb } from '@/lib/db';
+import { birthProfiles } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+
 const VEDASTRO_API = process.env.VEDASTRO_API_URL || 'https://api.vedastro.org';
 
 export async function GET(
@@ -13,6 +17,25 @@ export async function GET(
     return Response.json({ error: 'Invalid profile ID' }, { status: 400 });
   }
 
+  // Fetch profile from database for coordinates
+  const db = getDb();
+  let latitude = 28.6139; // default Delhi
+  let longitude = 77.2090;
+  let timezone = 'Asia/Kolkata';
+
+  if (db) {
+    try {
+      const profile = await db.select().from(birthProfiles).where(eq(birthProfiles.id, profileId)).limit(1);
+      if (profile.length > 0) {
+        latitude = profile[0].latitude || latitude;
+        longitude = profile[0].longitude || longitude;
+        timezone = profile[0].timezone || timezone;
+      }
+    } catch {
+      // use defaults
+    }
+  }
+
   try {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
@@ -20,14 +43,19 @@ export async function GET(
 
     const vedParams = new URLSearchParams({
       Date: `${dateStr}T${timeStr}:00`,
-      Latitude: '28.6139',
-      Longitude: '77.2090',
-      Timezone: 'Asia/Kolkata',
+      Latitude: String(latitude),
+      Longitude: String(longitude),
+      Timezone: timezone,
     });
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(`${VEDASTRO_API}/api/PlanetPosition/${vedParams.toString()}`, {
       headers: { 'Accept': 'application/json' },
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       throw new Error(`VedAstro returned ${response.status}`);

@@ -11,3 +11,6 @@ watch_dir = "src"
 binding = "DB"
 database_name = "vedai-db"
 database_id = "c928c70b-0d38-4d51-bce1-85dd499b31cd"
+
+[vars]
+VEDASTRO_API_URL = "https://api.vedastro.org"

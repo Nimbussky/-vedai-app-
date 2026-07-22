@@ -5,7 +5,7 @@ export const openRouterProvider: LLMProvider = {
   name: 'OpenRouter',
   slug: 'openrouter',
   url: 'https://openrouter.ai/api/v1/chat/completions',
-  apiKey: process.env.OPENROUTER_API_KEY,
+  getApiKey: () => process.env.OPENROUTER_API_KEY,
   model: 'meta-llama/llama-3.3-70b-instruct:free',
   priority: 5,
   supportsStreaming: true,

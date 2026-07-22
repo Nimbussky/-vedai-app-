@@ -6,7 +6,7 @@ export const ollamaProvider: LLMProvider = {
   name: 'Ollama',
   slug: 'ollama',
   url: `${process.env.OLLAMA_BASE_URL || 'http://localhost:11434'}/api/chat`,
-  apiKey: 'local',
+  getApiKey: () => 'local',
   model: 'llama3.3',
   priority: 10,
   supportsStreaming: true,

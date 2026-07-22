@@ -1,5 +1,9 @@
 export const runtime = 'edge';
 
+import { getDb } from '@/lib/db';
+import { birthProfiles } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+
 const VEDASTRO_API = process.env.VEDASTRO_API_URL || 'https://api.vedastro.org';
 
 const DASHA_SEQUENCE = [
@@ -105,25 +109,36 @@ export async function GET(
     return Response.json({ error: 'Invalid profile ID' }, { status: 400 });
   }
 
+  // Fetch profile from database
+  const db = getDb();
+  if (!db) {
+    return Response.json({ error: 'Database not available' }, { status: 500 });
+  }
+
   try {
-    const date = '1990-01-15';
-    const time = '10:30';
-    const latitude = 19.076;
-    const longitude = 72.8777;
-    const timezone = 'Asia/Kolkata';
+    const profile = await db.select().from(birthProfiles).where(eq(birthProfiles.id, profileId)).limit(1);
+    if (profile.length === 0) {
+      return Response.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    const { date, time, latitude, longitude, timezone } = profile[0];
 
     const vedParams = new URLSearchParams({
-      Date: `${date}T${time}:00`,
+      Date: `${date}T${time || '12:00'}:00`,
       Latitude: String(latitude),
       Longitude: String(longitude),
-      Timezone: timezone,
+      Timezone: timezone || 'UTC',
     });
 
     let nakshatraLord = 'Moon';
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
       const response = await fetch(`${VEDASTRO_API}/api/PlanetPosition/${vedParams.toString()}`, {
         headers: { 'Accept': 'application/json' },
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {

@@ -118,15 +118,20 @@ Generate a complete ${type || 'full'} report with these sections:
 
     const { glmProvider } = await import('@/lib/ai/providers/glm');
     let report: string;
-    if (glmProvider.apiKey) {
+    const glmKey = glmProvider.getApiKey();
+    if (glmKey) {
       let timeout: ReturnType<typeof setTimeout> | undefined;
       try {
         const controller = new AbortController();
         timeout = setTimeout(() => controller.abort(), 15000);
         const response = await fetch(glmProvider.url, {
           method: 'POST',
-          headers: glmProvider.buildHeaders(glmProvider.apiKey),
-          body: glmProvider.buildBody('Generate the report now.', reportPrompt).replace('"stream":true', '"stream":false'),
+          headers: glmProvider.buildHeaders(glmKey),
+          body: (() => {
+            const bodyObj = JSON.parse(glmProvider.buildBody('Generate the report now.', reportPrompt));
+            bodyObj.stream = false;
+            return JSON.stringify(bodyObj);
+          })(),
           signal: controller.signal,
         });
         clearTimeout(timeout);

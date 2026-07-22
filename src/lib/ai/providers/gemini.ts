@@ -5,7 +5,7 @@ export const geminiProvider: LLMProvider = {
   name: 'Gemini',
   slug: 'gemini',
   url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent',
-  apiKey: process.env.GEMINI_API_KEY,
+  getApiKey: () => process.env.GEMINI_API_KEY,
   model: 'gemini-2.0-flash',
   priority: 3,
   supportsStreaming: true,

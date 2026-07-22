@@ -7,7 +7,7 @@ export interface LLMProvider {
   name: string;
   slug: string;
   url: string;
-  apiKey: string | undefined;
+  getApiKey: () => string | undefined;
   model: string;
   priority: number;
   supportsStreaming: boolean;

@@ -5,7 +5,7 @@ export const glmProvider: LLMProvider = {
   name: 'GLM',
   slug: 'glm',
   url: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-  apiKey: process.env.GLM_API_KEY,
+  getApiKey: () => process.env.GLM_API_KEY,
   model: 'glm-4-flash',
   priority: 1,
   supportsStreaming: true,

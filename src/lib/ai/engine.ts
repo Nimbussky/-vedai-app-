@@ -36,13 +36,14 @@ export async function* streamChat(
         const controller = new AbortController();
         timeout = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS);
 
+        const apiKey = provider.getApiKey();
         const url = provider.slug === 'gemini'
-          ? `${provider.url}?key=${provider.apiKey}`
+          ? `${provider.url}?key=${apiKey}`
           : provider.url;
 
         const response = await fetch(url, {
           method: 'POST',
-          headers: provider.buildHeaders(provider.apiKey || ''),
+          headers: provider.buildHeaders(apiKey || ''),
           body: provider.buildBody(trimmed, fullPrompt),
           signal: controller.signal,
         });
@@ -70,7 +71,7 @@ export async function* streamChat(
   // All providers failed — try non-streaming GLM as last resort
   console.log('[VedAI] All streaming failed, trying non-streaming GLM...');
   const fallback = providers.find((p) => p.slug === 'glm');
-  if (fallback?.apiKey) {
+  if (fallback?.getApiKey()) {
     const result = await tryNonStreaming(fallback, trimmed, fullPrompt);
     if (result) {
       yield { chunk: result, provider: 'glm-fallback' };
@@ -219,13 +220,14 @@ async function tryNonStreaming(
       body = JSON.stringify(parsed);
     }
 
+    const apiKey = provider.getApiKey();
     const url = provider.slug === 'gemini'
-      ? `${provider.url.replace(':streamGenerateContent', ':generateContent')}?key=${provider.apiKey}`
+      ? `${provider.url.replace(':streamGenerateContent', ':generateContent')}?key=${apiKey}`
       : provider.url;
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: provider.buildHeaders(provider.apiKey || ''),
+      headers: provider.buildHeaders(apiKey || ''),
       body,
       signal: controller.signal,
     });

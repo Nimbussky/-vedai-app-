@@ -5,7 +5,7 @@ export const mistralProvider: LLMProvider = {
   name: 'Mistral',
   slug: 'mistral',
   url: 'https://api.mistral.ai/v1/chat/completions',
-  apiKey: process.env.MISTRAL_API_KEY,
+  getApiKey: () => process.env.MISTRAL_API_KEY,
   model: 'open-mistral-nemo',
   priority: 4,
   supportsStreaming: true,

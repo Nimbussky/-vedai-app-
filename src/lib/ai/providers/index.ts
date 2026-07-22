@@ -29,7 +29,7 @@ export function getActiveProviders(): LLMProvider[] {
     .filter((p) => {
       // Ollama is always available (local)
       if (p.slug === 'ollama') return true;
-      return !!p.apiKey;
+      return !!p.getApiKey();
     })
     .sort((a, b) => a.priority - b.priority);
 }
@@ -46,7 +46,7 @@ export function getProviderStatus() {
     slug: p.slug,
     model: p.model,
     priority: p.priority,
-    hasKey: p.slug === 'ollama' ? true : !!p.apiKey,
-    available: p.slug === 'ollama' ? true : !!p.apiKey,
+    hasKey: p.slug === 'ollama' ? true : !!p.getApiKey(),
+    available: p.slug === 'ollama' ? true : !!p.getApiKey(),
   }));
 }

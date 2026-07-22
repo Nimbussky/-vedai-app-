@@ -5,7 +5,7 @@ export const groqProvider: LLMProvider = {
   name: 'Groq',
   slug: 'groq',
   url: 'https://api.groq.com/openai/v1/chat/completions',
-  apiKey: process.env.GROQ_API_KEY,
+  getApiKey: () => process.env.GROQ_API_KEY,
   model: 'llama-3.3-70b-versatile',
   priority: 2,
   supportsStreaming: true,

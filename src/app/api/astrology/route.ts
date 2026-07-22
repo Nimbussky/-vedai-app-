@@ -80,10 +80,6 @@ export async function POST(request: Request) {
       cacheKey,
       source: usingFallback ? 'fallback' : 'vedastro',
       timestamp: new Date().toISOString(),
-    }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=2592000, stale-while-revalidate=86400'
-      }
     });
   } catch (error) {
     console.error('Astrology API error:', error);

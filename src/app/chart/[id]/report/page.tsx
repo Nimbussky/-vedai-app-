@@ -9,18 +9,40 @@ export default function ReportPage() {
   const [report, setReport] = useState('');
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState('');
+  const [profile, setProfile] = useState<{ date: string; time: string; latitude: number; longitude: number; place: string; timezone: string } | null>(null);
+
+  useEffect(() => {
+    // Load profile from localStorage
+    const stored = localStorage.getItem('vedai_user_birth');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          setProfile({
+            date: parsed.dob || parsed.date || '1990-01-15',
+            time: parsed.timeOfBirth || parsed.time || '10:30',
+            latitude: parsed.latitude || 19.076,
+            longitude: parsed.longitude || 72.8777,
+            place: parsed.placeOfBirth || parsed.place || 'Mumbai, India',
+            timezone: parsed.timezone || 'Asia/Kolkata',
+          });
+        }
+      } catch {}
+    }
+  }, []);
 
   async function generateReport(type: string) {
+    if (!profile) {
+      setReport('Please complete your birth profile first.');
+      return;
+    }
     setLoading(true);
     setReport('');
     try {
       const res = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          profile: { date: '1990-01-15', time: '10:30', latitude: 19.076, longitude: 72.8777, place: 'Mumbai, India', timezone: 'Asia/Kolkata' },
-          type,
-        }),
+        body: JSON.stringify({ profile, type }),
       });
       const data = await res.json();
       if (data.report) {

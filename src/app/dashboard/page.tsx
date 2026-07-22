@@ -99,7 +99,7 @@ export default function Dashboard() {
       .catch((err) => { if (err.name !== 'AbortError') console.error(err); });
 
     return () => abortController.abort();
-  }, []);
+  }, [userBirth]);
 
   const initials = typeof userBirth?.name === 'string'
     ? userBirth.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'S'
