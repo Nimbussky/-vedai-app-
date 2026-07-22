@@ -1,8 +1,19 @@
 export const runtime = 'edge';
 
 import { streamChat, VEDAI_SYSTEM_PROMPT } from '@/lib/ai';
+import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
+  const clientIP = getClientIP(request);
+  const { allowed, remaining } = checkRateLimit(`chat:${clientIP}`, 20, 60000);
+
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a minute.' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'X-RateLimit-Remaining': '0' },
+    });
+  }
+
   try {
     const { message, chartData } = await request.json();
 
@@ -34,6 +45,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'Transfer-Encoding': 'chunked',
+        'X-RateLimit-Remaining': String(remaining),
       },
     });
 

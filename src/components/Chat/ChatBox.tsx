@@ -8,6 +8,8 @@ export type Message = {
   timestamp: string;
 };
 
+const STORAGE_KEY = 'vedai_chat_history';
+
 const MessageItem: React.FC<{ message: Message }> = ({ message }) => (
   <div className={`p-3 rounded-lg max-w-[80%] ${message.sender === 'User' ? 'bg-[#3B5BDB] self-end text-white' : 'bg-[#1A2338] border border-[#F7F7F5]/10 self-start text-[#F7F7F5]'}`}>
     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
@@ -16,7 +18,7 @@ const MessageItem: React.FC<{ message: Message }> = ({ message }) => (
 );
 
 const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = [] }) => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [chartData, setChartData] = useState<Array<Record<string, unknown>> | null>(null);
@@ -33,6 +35,18 @@ const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Load chat history
+      const savedMessages = localStorage.getItem(STORAGE_KEY);
+      if (savedMessages) {
+        try {
+          const parsed = JSON.parse(savedMessages);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+          }
+        } catch {}
+      }
+
+      // Load chart data
       const storedChart = localStorage.getItem('vedai_user_chart');
       if (storedChart) {
         try {
@@ -43,15 +57,15 @@ const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = 
           console.error("Error parsing chart data", e);
         }
       } else {
-        setMessages((prev) => [
-          ...prev,
-          {
+        setMessages((prev) => {
+          if (prev.length > 0) return prev;
+          return [{
             id: Date.now(),
             text: "Namaste! I noticed you haven't saved your birth chart yet. I can answer general astrology questions, but for personalized readings, please add your birth details on the Dashboard!",
             sender: 'AI',
             timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
-          }
-        ]);
+          }];
+        });
       }
     }
   }, []);
@@ -59,6 +73,12 @@ const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-50)));
     }
   }, [messages]);
 
@@ -119,8 +139,8 @@ const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = 
           });
         }
       }
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       
       setMessages((prev) => {
         if (prev.length === 0) return prev;
@@ -135,6 +155,11 @@ const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = 
       setIsStreaming(false);
     }
   };
+
+  function clearHistory() {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+  }
 
   return (
     <div className="flex flex-col h-full bg-[#0B1120]">
@@ -162,8 +187,15 @@ const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = 
           </div>
         )}
       </div>
-      <form onSubmit={handleSend} className="p-4 border-t border-[#F7F7F5]/10">
-        <div className="flex gap-2">
+      <div className="p-4 border-t border-[#F7F7F5]/10">
+        {messages.length > 0 && (
+          <div className="flex justify-end mb-2">
+            <button onClick={clearHistory} className="text-xs text-[#F7F7F5]/30 hover:text-[#F7F7F5]/50 transition-colors">
+              Clear chat history
+            </button>
+          </div>
+        )}
+        <form onSubmit={handleSend} className="flex gap-2">
           <input
             type="text"
             value={inputValue}
@@ -181,8 +213,8 @@ const ChatBox: React.FC<{ initialMessages?: Message[] }> = ({ initialMessages = 
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

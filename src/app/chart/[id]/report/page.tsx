@@ -12,7 +12,6 @@ export default function ReportPage() {
   const [profile, setProfile] = useState<{ date: string; time: string; latitude: number; longitude: number; place: string; timezone: string } | null>(null);
 
   useEffect(() => {
-    // Load profile from localStorage
     const stored = localStorage.getItem('vedai_user_birth');
     if (stored) {
       try {
@@ -56,6 +55,47 @@ export default function ReportPage() {
     }
   }
 
+  function downloadPDF() {
+    if (!report) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>VedAI Report - ${profile?.place || 'Birth Chart'}</title>
+        <style>
+          body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 20px; color: #1a1a1a; line-height: 1.6; }
+          h1 { color: #0B1120; border-bottom: 2px solid #D4A24C; padding-bottom: 10px; }
+          h2 { color: #3B5BDB; margin-top: 30px; }
+          h3 { color: #555; }
+          .header { text-align: center; margin-bottom: 40px; }
+          .logo { font-size: 28px; font-weight: bold; color: #D4A24C; }
+          .meta { color: #666; font-size: 14px; margin-top: 10px; }
+          @media print { body { margin: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">VedAI</div>
+          <div class="meta">Vedic Astrology Report | Generated: ${new Date().toLocaleDateString()}</div>
+          <div class="meta">${profile?.place || ''} | ${profile?.date || ''}</div>
+        </div>
+        ${report.split('\n').map(line => {
+          if (line.startsWith('# ')) return `<h1>${line.replace('# ', '')}</h1>`;
+          if (line.startsWith('## ')) return `<h2>${line.replace('## ', '')}</h2>`;
+          if (line.startsWith('### ')) return `<h3>${line.replace('### ', '')}</h3>`;
+          if (line.startsWith('- ')) return `<li>${line.replace('- ', '')}</li>`;
+          if (line.trim() === '') return '<br>';
+          return `<p>${line}</p>`;
+        }).join('')}
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }
+
   return (
     <div className="min-h-screen bg-[#0B1120] text-[#F7F7F5]">
       <header className="border-b border-[#F7F7F5]/10 px-6 py-4">
@@ -75,7 +115,7 @@ export default function ReportPage() {
           <p className="text-[#F7F7F5]/50 mt-1">Get a detailed interpretation powered by AI</p>
         </div>
 
-        <div className="flex gap-3 mb-8">
+        <div className="flex gap-3 mb-8 flex-wrap">
           {['full', 'career', 'relationship', 'health'].map((type) => (
             <button
               key={type}
@@ -86,6 +126,14 @@ export default function ReportPage() {
               {type === 'full' ? 'Full Report' : type}
             </button>
           ))}
+          {report && !loading && (
+            <button
+              onClick={downloadPDF}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-[#D4A24C]/10 border border-[#D4A24C]/30 text-[#D4A24C] hover:bg-[#D4A24C]/20 transition-colors ml-auto"
+            >
+              Download PDF
+            </button>
+          )}
         </div>
 
         {loading && (

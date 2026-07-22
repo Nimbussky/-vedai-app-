@@ -41,9 +41,10 @@ const SIGN_NAMES = [
 
 const SIGN_SYMBOLS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 
-const NatalChart: React.FC<{ planets?: Planet[] }> = ({ planets = [] }) => {
+const NatalChart: React.FC<{ planets?: Planet[]; onPlanetClick?: (planet: Planet) => void }> = ({ planets = [], onPlanetClick }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [chartData, setChartData] = useState<Planet[]>(planets);
+  const [selectedPlanet, setSelectedPlanet] = useState<Planet | null>(null);
 
   useEffect(() => {
     setIsVisible(true);
@@ -53,7 +54,6 @@ const NatalChart: React.FC<{ planets?: Planet[] }> = ({ planets = [] }) => {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          // API returns { planets: [...], cacheKey, source, timestamp }
           const extracted = Array.isArray(parsed.planets) ? parsed.planets : (Array.isArray(parsed) ? parsed : null);
           if (extracted && extracted.length > 0) {
             setChartData(extracted);
@@ -68,6 +68,11 @@ const NatalChart: React.FC<{ planets?: Planet[] }> = ({ planets = [] }) => {
       }
     }
   }, [planets]);
+
+  function handlePlanetClick(planet: Planet) {
+    setSelectedPlanet(planet);
+    onPlanetClick?.(planet);
+  }
 
   const size = 384;
   const cx = size / 2;
@@ -132,11 +137,12 @@ const NatalChart: React.FC<{ planets?: Planet[] }> = ({ planets = [] }) => {
           const y = cy + planetR * Math.sin(angle - Math.PI / 2);
           const color = PLANET_COLORS[planet.name] || '#F7F7F5';
           const symbol = PLANET_SYMBOLS[planet.name] || planet.name[0];
+          const isSelected = selectedPlanet?.name === planet.name;
 
           return (
-            <g key={planet.name} filter="url(#glow)">
-              <circle cx={x} cy={y} r={12} fill={color} opacity="0.2" />
-              <circle cx={x} cy={y} r={8} fill={color} opacity="0.8" />
+            <g key={planet.name} filter="url(#glow)" className="cursor-pointer" onClick={() => handlePlanetClick(planet)}>
+              <circle cx={x} cy={y} r={isSelected ? 16 : 12} fill={color} opacity={isSelected ? 0.4 : 0.2} />
+              <circle cx={x} cy={y} r={isSelected ? 10 : 8} fill={color} opacity="0.8" />
               <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="#0B1120" fontSize="9" fontWeight="bold" fontFamily="serif">
                 {symbol}
               </text>
@@ -153,9 +159,25 @@ const NatalChart: React.FC<{ planets?: Planet[] }> = ({ planets = [] }) => {
         <circle cx={cx} cy={cy} r={4} fill="#D4A24C" />
       </svg>
 
+      {selectedPlanet && (
+        <div className="mt-4 p-4 bg-[#1A2338] rounded-xl border border-[#3B5BDB]/30 animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-2xl">{PLANET_SYMBOLS[selectedPlanet.name]}</span>
+            <div>
+              <h4 className="font-medium" style={{ color: PLANET_COLORS[selectedPlanet.name] }}>{selectedPlanet.name}</h4>
+              <p className="text-xs text-[#F7F7F5]/50">{selectedPlanet.sign} • House {selectedPlanet.house} {selectedPlanet.retrograde ? '• Retrograde' : ''}</p>
+            </div>
+          </div>
+          {selectedPlanet.nakshatra && (
+            <p className="text-xs text-[#F7F7F5]/40">Nakshatra: {selectedPlanet.nakshatra}</p>
+          )}
+          <p className="text-xs text-[#3B5BDB] mt-2">Click "AI Chat" for detailed interpretation</p>
+        </div>
+      )}
+
       <div className="mt-4 flex flex-wrap gap-2 justify-center">
         {chartData.map((planet) => (
-          <div key={planet.name} className="flex items-center gap-1 px-2 py-1 rounded bg-[#1A2338] border border-[#F7F7F5]/5 text-xs">
+          <div key={planet.name} className="flex items-center gap-1 px-2 py-1 rounded bg-[#1A2338] border border-[#F7F7F5]/5 text-xs cursor-pointer hover:bg-[#1A2338]/80 transition-colors" onClick={() => handlePlanetClick(planet)}>
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PLANET_COLORS[planet.name] || '#F7F7F5' }} />
             <span className="text-[#F7F7F5]/80">{planet.name}</span>
             <span className="text-[#F7F7F5]/40">{planet.sign}</span>
